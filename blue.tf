@@ -55,8 +55,8 @@ resource "aws_autoscaling_group" "blue" {
   name = "asg"
   #availability_zones        = ["ap-southeast-1a", "ap-southeast-1b"]
   max_size            = 4
-  min_size            = 1
-  desired_capacity    = 1
+  min_size            = 2
+  desired_capacity    = 2
   force_delete        = true
   vpc_zone_identifier = data.aws_subnets.public.ids
 
@@ -110,6 +110,13 @@ resource "aws_lb_target_group" "blue" {
   port     = 80
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.selected.id
+
+    health_check {
+    port     = 80
+    protocol = "HTTP"
+    timeout  = 3
+    interval = 5
+  }
 }
 
 
