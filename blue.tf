@@ -14,9 +14,9 @@ resource "aws_security_group" "blue" {
   }
 
   ingress {
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
+    from_port = 22
+    to_port   = 22
+    protocol  = "tcp"
 
   }
 
@@ -30,18 +30,23 @@ resource "aws_security_group" "blue" {
 }
 
 resource "aws_launch_template" "blue" {
-  name_prefix   = "blue-"
+  name_prefix   = "blue"
   image_id      = data.aws_ami.blue.id
   instance_type = "t2.micro"
-  vpc_security_group_ids = ["${aws_security_group.blue.id}"]
-  #user_data = filebase64("${path.module}/init-script.sh")
-  key_name = "kokhui-key"
-  
-  
-  # network_interfaces {
-  #   associate_public_ip_address = true
-  #   security_groups             = ["${aws_security_group.blue.id}"]
-  # }
+  user_data     = filebase64("${path.module}/init-script.sh")
+  key_name      = "KH-key"
+
+
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = ["${aws_security_group.blue.id}"]
+    #subnet_id                   = element(data.aws_subnets.private.ids, count.index)
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tag_specifications {
     resource_type = "instance"
     tags = {
@@ -52,14 +57,13 @@ resource "aws_launch_template" "blue" {
 
 ###=============Auto Scaling Group (ASG)=============###
 resource "aws_autoscaling_group" "blue" {
-  name = "asg"
-  #availability_zones        = ["ap-southeast-1a", "ap-southeast-1b"]
+  name                = "asg"
   max_size            = 4
   min_size            = 2
   desired_capacity    = 2
   force_delete        = true
-  vpc_zone_identifier = data.aws_subnets.public.ids
-
+  vpc_zone_identifier = [for subnet in data.aws_subnets.private.ids : subnet]
+  
   launch_template {
     id      = aws_launch_template.blue.id
     version = "$Latest"
@@ -71,14 +75,8 @@ resource "aws_autoscaling_group" "blue" {
     heartbeat_timeout    = 300
     lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
 
-    # notification_metadata = jsonencode({
-    #   foo = "bar"
-    # })
-
-    # notification_target_arn = "arn:aws:sqs:us-east-1:444455556666:queue1*"
-    # role_arn                = "arn:aws:iam::123456789012:role/S3Access"
   }
-
+  
   tag {
     key                 = "name"
     value               = "blue"
@@ -111,7 +109,7 @@ resource "aws_lb_target_group" "blue" {
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.selected.id
 
-    health_check {
+  health_check {
     port     = 80
     protocol = "HTTP"
     timeout  = 3
