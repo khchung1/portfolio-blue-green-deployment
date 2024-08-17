@@ -26,7 +26,7 @@ data "aws_subnets" "private" {
   }
 }
 
-data "aws_ami" "blue" {
+data "aws_ami" "ami_1" {
   most_recent = true
   owners      = ["amazon"]
 
