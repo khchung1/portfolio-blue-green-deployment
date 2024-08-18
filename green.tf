@@ -56,7 +56,7 @@ resource "aws_autoscaling_group" "green" {
   desired_capacity    = 2
   force_delete        = true
   vpc_zone_identifier = [for subnet in data.aws_subnets.private.ids : subnet]
-  
+
   launch_template {
     id      = aws_launch_template.green.id
     version = "$Latest"
@@ -69,7 +69,7 @@ resource "aws_autoscaling_group" "green" {
     lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
 
   }
-  
+
   tag {
     key                 = "name"
     value               = "green"
@@ -84,7 +84,7 @@ resource "aws_autoscaling_group" "green" {
 
 resource "aws_autoscaling_attachment" "green" {
   autoscaling_group_name = aws_autoscaling_group.green.id
-  lb_target_group_arn = aws_lb_target_group.green.arn
+  lb_target_group_arn    = aws_lb_target_group.green.arn
 
 }
 
