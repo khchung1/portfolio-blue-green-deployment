@@ -89,7 +89,6 @@ resource "aws_autoscaling_group" "blue" {
 
 resource "aws_autoscaling_attachment" "blue" {
   autoscaling_group_name = aws_autoscaling_group.blue.id
-  #elb    = aws_lb.prod.id
   lb_target_group_arn = aws_lb_target_group.blue.arn
 
 }

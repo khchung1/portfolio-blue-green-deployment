@@ -47,22 +47,22 @@ resource "aws_lb_listener" "front_end" {
 
 
   default_action {
-    type             = "forward"
+    type = "forward"
     forward {
       target_group {
-        arn =   aws_lb_target_group.blue.arn
+        arn    = aws_lb_target_group.blue.arn
         weight = 70
       }
-    
+
       target_group {
-        arn =   aws_lb_target_group.green.arn
+        arn    = aws_lb_target_group.green.arn
         weight = 30
-    }
+      }
       stickiness {
         enabled  = false
         duration = 1
-  }
-}
+      }
+    }
   }
 }
 
@@ -81,29 +81,29 @@ resource "aws_wafv2_web_acl" "prod" {
   }
 
   rule {
-    name = "my-first-rule"
+    name     = "my-first-rule"
     priority = 1
     override_action {
-      count{}
+      count {}
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = false
-      metric_name = "first-rule-metric"
-      sampled_requests_enabled = false
+      metric_name                = "first-rule-metric"
+      sampled_requests_enabled   = false
     }
 
     statement {
       managed_rule_group_statement {
-        name = "AWSManagedRulesAdminProtectionRuleSet"
+        name        = "AWSManagedRulesAdminProtectionRuleSet"
         vendor_name = "AWS"
         rule_action_override {
           action_to_use {
-            block{}
+            block {}
           }
           name = "AdminProtection_URIPATH"
         }
-}
+      }
     }
   }
 }
