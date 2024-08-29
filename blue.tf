@@ -4,7 +4,7 @@ resource "aws_security_group" "blue" {
   name        = "blue-sg"
   description = "Allow alb traffic to app"
   vpc_id      = data.aws_vpc.selected.id
-
+  #allows inbound traffic from alb security group
   ingress {
     from_port       = 0
     to_port         = 0
@@ -12,7 +12,7 @@ resource "aws_security_group" "blue" {
     security_groups = [aws_security_group.alb.id]
 
   }
-
+  #allows inbound traffic from SSH connection
   ingress {
     from_port = 22
     to_port   = 22
@@ -29,6 +29,7 @@ resource "aws_security_group" "blue" {
 
 }
 
+#template to configure ec2 size, type and what to install in it
 resource "aws_launch_template" "blue" {
   name_prefix   = "blue"
   image_id      = data.aws_ami.ami_1.id
@@ -36,7 +37,7 @@ resource "aws_launch_template" "blue" {
   user_data     = filebase64("${path.module}/init-script.sh")
   key_name      = "KH-key"
 
-
+  
   network_interfaces {
     associate_public_ip_address = true
     security_groups             = ["${aws_security_group.blue.id}"]
@@ -55,7 +56,8 @@ resource "aws_autoscaling_group" "blue" {
   min_size            = 2
   desired_capacity    = 2
   force_delete        = true
-  vpc_zone_identifier = [for subnet in data.aws_subnets.private.ids : subnet]
+  # as the security group (sg) of the ec2 allows either inbound traffic from alb sg and SSH, the ec2 created in ASG can be deploy in private subnet for better security
+  vpc_zone_identifier = [for subnet in data.aws_subnets.private.ids : subnet] 
 
   launch_template {
     id      = aws_launch_template.blue.id
@@ -95,6 +97,7 @@ resource "aws_autoscaling_attachment" "blue" {
 
 
 ###===============Target Group for ALB ==============###
+#attach target group to ASG
 resource "aws_lb_target_group" "blue" {
   name     = "tg-blue"
   port     = 80

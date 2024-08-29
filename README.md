@@ -6,7 +6,7 @@ This project demonstrates blue/green deployment using Terraform for cloud infras
 - Once testing has been completed on the green environment, live application traffic is directed to the green environment and the blue environment is deprecated.
 
 # Architecture Diagram
-![alt text](image.png)
+![alt text](architecture_diagram.png)
 
 Above architecture diagram illustrates Blue-Green deployment in an AWS environment. The diagram consist of the following key components:
 
@@ -24,18 +24,44 @@ Above architecture diagram illustrates Blue-Green deployment in an AWS environme
 
 In a nutshell, Clients send requests to the application. The requests enter the VPC through the Internet Gateway. The ALB receives the requests and distribute them according to the weightage and direct to the EC2s. Users will receive either Blue or Green website depending on the traffic directed.
 
-# Terraform Code
-For organizing resources and improve code readability, the code are split into multiple terraform (.tf) files: 
+# Terraform
+For organizing resources and improve code readability, the code are split into multiple terraform files. The following are the file used for the projects and its purpose:
 
-1. backend.tf     
-2. provider.tf
-3. main.tf 
-4. blue.tf
-5. green.tf
-6. variables.tf
+
 
 | Filename | Purpose |
 |----------|----------|
-|backend.tf | Stores a snapshot of the current state of the deployed resources, including the configuration and dependencies. This allows Terraform to track changes and prevent accidental drifts between your desired infrastructure configuration and the actual deployed resources.|
+|backend.tf | Stores a snapshot of the current state of the deployed resources, including the configuration and dependencies. This allows Terraform to track changes and prevent accidental drifts between your desired infrastructure configuration and the actual deployed resources|
 |provider.tf| Informs Terraform which terraform and AWS version to use|
-|main.tf | The code configuration for Application Load Balancer and Web Application Firewall
+|main.tf | Code to provision Application Load Balancer and Web Application Firewall|
+|blue.tf & green.tf | Code to deploy EC2 & Auto-Scaling Group for blue and green environment respectively|
+|variables.tf| Declare input variables for Terraform configurations|
+
+
+
+# Deployment
+
+To deploy, execute the following terraform commands:
+
+```terraform
+terraform init   
+terrform validate
+terraform plan
+terraform apply --auto-approve
+```
+
+Once the execution are complete, curl command is used on the DNS of the ALB to check the content of the deployed websites 10 times. 
+
+
+```Bash
+for i in {1..10}; do curl production-alb-1461051181.ap-southeast-1.elb.amazonaws.com; done
+```
+
+![alt text](curl_result.png)
+
+As shown, out of 10 requests, 2 of it are from the new version which is the approximate weightage settings in the ALB setting. This shows that the blue-green deployment has been sucessfuly deployed.
+
+To remove the deployed resources, execute:
+```terraform
+terraform destroy --auto-approve
+```
